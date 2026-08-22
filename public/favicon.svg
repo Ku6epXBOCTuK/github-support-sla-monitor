@@ -1,0 +1,42 @@
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gt" x1="0" y1="0" x2=".6" y2="1">
+      <stop offset="0" stop-color="#343633"/>
+      <stop offset=".48" stop-color="#171918"/>
+      <stop offset="1" stop-color="#252724"/>
+    </linearGradient>
+    <linearGradient id="gb" x1="0" y1="0" x2=".6" y2="1">
+      <stop offset="0" stop-color="#282b29"/>
+      <stop offset=".6" stop-color="#111313"/>
+      <stop offset="1" stop-color="#202220"/>
+    </linearGradient>
+    <clipPath id="card">
+      <rect x="38" y="38" width="104" height="104" rx="12"/>
+    </clipPath>
+  </defs>
+
+  <rect width="180" height="180" rx="40" fill="#090a0a"/>
+
+  <!-- flip card: two halves -->
+  <g clip-path="url(#card)">
+    <rect x="38" y="38" width="104" height="52" fill="url(#gt)"/>
+    <rect x="38" y="90" width="104" height="52" fill="url(#gb)"/>
+    <rect x="39" y="39" width="102" height="102" rx="11" stroke="#393934" stroke-width="2"/>
+  </g>
+
+  <!-- seven-segment "4" -->
+  <g fill="#eee9dd">
+    <rect x="60" y="52" width="12" height="44" rx="5"/>
+    <rect x="108" y="52" width="12" height="44" rx="5"/>
+    <rect x="60" y="84" width="60" height="12" rx="5"/>
+    <rect x="108" y="90" width="12" height="38" rx="5"/>
+  </g>
+
+  <!-- seam + warm highlight -->
+  <rect x="34" y="87" width="112" height="4" rx="2" fill="#0b0c0c"/>
+  <rect x="36" y="91.5" width="108" height="1.5" fill="#b99a62" opacity=".45"/>
+
+  <!-- hinge notches -->
+  <circle cx="38" cy="89" r="7" fill="#090a0a"/>
+  <circle cx="142" cy="89" r="7" fill="#090a0a"/>
+</svg>

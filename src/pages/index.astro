@@ -1,0 +1,187 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+const START_DATE = new Date("2026-07-09T20:00:00+05:00");
+
+function getElapsedTime(): { days: number; hours: number; minutes: number; seconds: number } {
+  const totalSeconds = Math.max(0, Math.floor((Date.now() - START_DATE.getTime()) / 1000));
+  return {
+    days: Math.floor(totalSeconds / 86400),
+    hours: Math.floor((totalSeconds % 86400) / 3600),
+    minutes: Math.floor((totalSeconds % 3600) / 60),
+    seconds: totalSeconds % 60,
+  };
+}
+
+function pad(value: number): string {
+  return value.toString().padStart(2, "0");
+}
+
+const time = getElapsedTime();
+const units = [
+  { label: "Days", digits: pad(time.days), value: time.days, wide: true },
+  { label: "Hours", digits: pad(time.hours), value: time.hours, wide: false },
+  { label: "Minutes", digits: pad(time.minutes), value: time.minutes, wide: false },
+  { label: "Seconds", digits: pad(time.seconds), value: time.seconds, wide: false },
+];
+
+const startLabel = START_DATE.toLocaleDateString("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  timeZone: "Etc/GMT-5",
+}).toUpperCase();
+---
+
+<Layout
+  title="Waiting for GitHub Support — Elapsed Time"
+  description="A live record of time elapsed since a GitHub support ticket was opened."
+>
+  <main class="clock-page">
+    <div class="ambient-line ambient-line-left"></div>
+    <div class="ambient-line ambient-line-right"></div>
+
+    <header class="site-header">
+      <div class="brand-mark"><span class="brand-dot"></span> GITHUB TICKET ID: 4549142</div>
+      <div class="header-status"><span class="status-pulse"></span> STATUS: AWAITING RESPONSE</div>
+    </header>
+
+    <section class="hero-content" aria-labelledby="page-title">
+      <div class="eyebrow"><span></span> TIME IN LIMBO <span></span></div>
+      <h1 id="page-title">Waiting for GitHub<br /><em>Support</em></h1>
+      <p class="subtitle">Time elapsed since the ticket was opened without a response.</p>
+
+      <div class="clock-frame">
+        <div class="clock-frame-top"><span>ELAPSED TIME</span><span>SLA: NOT FOUND</span></div>
+        <div class="clock-display" role="timer" aria-live="polite">
+          {
+            units.map((unit, index) => (
+              <>
+                {index > 0 && (
+                  <span class="unit-divider" aria-hidden="true">
+                    :
+                  </span>
+                )}
+                <div class:list={["clock-unit", { "clock-unit-wide": unit.wide }]}>
+                  <div class="unit-digits" data-unit={unit.label} aria-label={`${unit.value} ${unit.label}`}>
+                    {unit.digits.split("").map((digit) => (
+                      <span class="flip-digit" data-displayed={digit} aria-hidden="true">
+                        <span class="digit-face digit-top">{digit}</span>
+                        <span class="digit-face digit-bottom">{digit}</span>
+                        <span class="digit-flap digit-flap-top">{digit}</span>
+                        <span class="digit-flap digit-flap-bottom">{digit}</span>
+                        <span class="digit-seam" />
+                        <span class="digit-notch digit-notch-left" />
+                        <span class="digit-notch digit-notch-right" />
+                      </span>
+                    ))}
+                  </div>
+                  <span class="unit-label">{unit.label}</span>
+                </div>
+              </>
+            ))
+          }
+        </div>
+        <div class="clock-frame-bottom"><span>OPENED {startLabel}</span><span>NO RESOLUTION YET</span></div>
+      </div>
+    </section>
+
+    <footer class="site-footer">
+      <span>AN EXERCISE IN PATIENCE</span>
+      <span class="footer-rule"></span>
+      <span>THE CLOCK KEEPS MOVING</span>
+    </footer>
+  </main>
+
+  <script>
+    const START_TIME = new Date("2026-07-09T20:00:00+05:00").getTime();
+    const FLIP_MS = 640;
+
+    function getElapsedTime(): [number, number, number, number] {
+      const total = Math.max(0, Math.floor((Date.now() - START_TIME) / 1000));
+      return [
+        Math.floor(total / 86400),
+        Math.floor((total % 86400) / 3600),
+        Math.floor((total % 3600) / 60),
+        total % 60,
+      ];
+    }
+
+    function pad(value: number): string {
+      return value.toString().padStart(2, "0");
+    }
+
+    function startFlip(digit: HTMLElement, value: string): void {
+      const displayed = digit.dataset.displayed ?? "0";
+      digit.querySelector(".digit-top")!.textContent = value;
+      digit.querySelector(".digit-flap-top")!.textContent = displayed;
+      digit.querySelector(".digit-flap-bottom")!.textContent = value;
+      digit.classList.add("is-flipping");
+
+      window.setTimeout(() => {
+        digit.dataset.displayed = value;
+        digit.classList.remove("is-flipping");
+        for (const face of digit.querySelectorAll(".digit-top, .digit-bottom, .digit-flap-top, .digit-flap-bottom")) {
+          face.textContent = value;
+        }
+        const pending = digit.dataset.pending;
+        delete digit.dataset.pending;
+        if (pending && pending !== value) startFlip(digit, pending);
+      }, FLIP_MS);
+    }
+
+    function setDigit(digit: HTMLElement, value: string): void {
+      if (digit.dataset.displayed === value) return;
+      if (digit.classList.contains("is-flipping")) {
+        digit.dataset.pending = value;
+        return;
+      }
+      startFlip(digit, value);
+    }
+
+    function updateUnit(container: HTMLElement, value: number): void {
+      container.setAttribute("aria-label", `${value} ${container.dataset.unit}`);
+      const target = pad(value).split("");
+      const existing = Array.from(container.querySelectorAll<HTMLElement>(".flip-digit"));
+
+      if (existing.length !== target.length) {
+        container.innerHTML = target
+          .map(
+            (d) =>
+              `<span class="flip-digit" data-displayed="${d}" aria-hidden="true">` +
+              '<span class="digit-face digit-top">' +
+              d +
+              "</span>" +
+              '<span class="digit-face digit-bottom">' +
+              d +
+              "</span>" +
+              '<span class="digit-flap digit-flap-top">' +
+              d +
+              "</span>" +
+              '<span class="digit-flap digit-flap-bottom">' +
+              d +
+              "</span>" +
+              '<span class="digit-seam"></span>' +
+              '<span class="digit-notch digit-notch-left"></span>' +
+              '<span class="digit-notch digit-notch-right"></span>' +
+              "</span>",
+          )
+          .join("");
+        return;
+      }
+
+      existing.forEach((digit, i) => setDigit(digit, target[i]!));
+    }
+
+    const containers = Array.from(document.querySelectorAll<HTMLElement>("[data-unit]"));
+
+    function tick(): void {
+      const [days, hours, minutes, seconds] = getElapsedTime();
+      const values = [days, hours, minutes, seconds];
+      containers.forEach((container, i) => updateUnit(container, values[i]!));
+    }
+
+    tick();
+    window.setInterval(tick, 1000);
+  </script>
+</Layout>

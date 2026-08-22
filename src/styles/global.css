@@ -1,0 +1,52 @@
+:root {
+  color-scheme: dark;
+  --background: #090a0a;
+  --foreground: #e9e4d9;
+  --gold: #b99a62;
+  --font-inter: 'Inter', sans-serif;
+  --font-cormorant: 'Cormorant Garamond', Georgia, serif;
+  --font-mono-local: 'IBM Plex Mono', monospace;
+}
+
+* { box-sizing: border-box; }
+html { background: var(--background); }
+body { margin: 0; background: var(--background); color: var(--foreground); }
+
+.clock-page {
+  position: relative; min-height: 100svh; overflow: hidden; display: flex; flex-direction: column;
+  padding: 28px clamp(20px, 5vw, 80px) 24px; background-color: #090a0a;
+  background-image: linear-gradient(135deg, rgba(255,255,255,.018) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.018) 50%, rgba(255,255,255,.018) 75%, transparent 75%);
+  background-size: 9px 9px;
+}
+.clock-page::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 45%, transparent 22%, rgba(0,0,0,.55) 100%); }
+.site-header, .site-footer { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; color: #77766f; font: 10px var(--font-mono-local); letter-spacing: .19em; }
+.brand-mark { display: flex; align-items: center; gap: 9px; color: #b1aca1; }
+.brand-dot, .status-pulse { width: 5px; height: 5px; display: inline-block; border-radius: 50%; background: var(--gold); box-shadow: 0 0 10px rgba(185,154,98,.6); }
+.header-status { display: flex; gap: 9px; align-items: center; }
+.ambient-line { position: absolute; z-index: 0; top: 47%; width: 17vw; height: 1px; background: linear-gradient(90deg, transparent, rgba(185,154,98,.25)); }
+.ambient-line-left { left: 0; }.ambient-line-right { right: 0; transform: rotate(180deg); }
+.hero-content { position: relative; z-index: 1; width: min(1360px, 100%); margin: auto; text-align: center; }
+.eyebrow { display: flex; align-items: center; justify-content: center; gap: 14px; color: var(--gold); font: 10px var(--font-mono-local); letter-spacing: .28em; }
+.eyebrow span { width: 32px; height: 1px; background: rgba(185,154,98,.5); }
+h1 { margin: 22px 0 10px; color: #e8e1d3; font: 400 clamp(42px, 6.2vw, 92px)/.88 var(--font-cormorant), Georgia, serif; letter-spacing: -.035em; }
+h1 em { color: var(--gold); font-style: italic; }
+.subtitle { margin: 0 auto 44px; color: #88877f; font: 12px/1.5 var(--font-inter), sans-serif; letter-spacing: .05em; }
+.clock-frame { border-top: 1px solid rgba(185,154,98,.5); border-bottom: 1px solid rgba(185,154,98,.5); padding: 17px 0 16px; }
+.clock-frame-top, .clock-frame-bottom { display: flex; justify-content: space-between; color: #77766f; font: 9px var(--font-mono-local); letter-spacing: .16em; }
+.clock-frame-bottom { margin-top: 22px; color: #9b8357; }
+.clock-display { display: flex; align-items: center; justify-content: center; gap: clamp(7px, 1vw, 18px); margin-top: 13px; }
+.clock-unit { min-width: 0; flex: 1; }.unit-digits { display: flex; gap: clamp(4px, .7vw, 11px); justify-content: center; }.unit-label { display: block; margin-top: 13px; color: #aba79c; font: 9px var(--font-mono-local); letter-spacing: .22em; text-transform: uppercase; }
+.unit-divider { margin-top: -16px; color: #a98d5a; font: 600 clamp(28px, 4vw, 72px)/1 var(--font-mono-local); opacity: .8; }
+.flip-digit { position: relative; display: block; width: clamp(38px, 7vw, 118px); height: clamp(54px, 11vw, 158px); perspective: 600px; color: #eee9dd; font: 500 clamp(43px, 8.8vw, 126px)/1 var(--font-mono-local); letter-spacing: -.14em; text-indent: -.12em; text-align: center; filter: drop-shadow(0 15px 15px rgba(0,0,0,.5)); }
+.digit-face, .digit-flap { position: absolute; inset: 0; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #393934; text-shadow: 0 2px 2px #000; }
+.digit-top { clip-path: inset(0 0 50% 0); border-radius: 4px; background: linear-gradient(145deg, #343633, #171918 48%, #252724); }.digit-bottom { clip-path: inset(50% 0 0 0); border-radius: 4px; background: linear-gradient(145deg, #282b29, #111313 60%, #202220); }
+.digit-face::after, .digit-flap::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(115deg, transparent 0 3px, rgba(255,255,255,.018) 3px 4px); pointer-events: none; }
+.digit-seam { position: absolute; top: calc(50% - 1px); left: 0; right: 0; height: 2px; background: #0b0c0c; box-shadow: 0 1px 2px rgba(255,255,255,.13); z-index: 3; }
+.digit-notch { position: absolute; z-index: 5; top: calc(50% - 4px); width: 7px; height: 8px; background: #090a0a; border-radius: 50%; }.digit-notch-left { left: -4px; }.digit-notch-right { right: -4px; }
+.digit-flap { z-index: 4; backface-visibility: hidden; transform-style: preserve-3d; }.digit-flap-top { clip-path: inset(0 0 50% 0); transform-origin: 50% 50%; border-radius: 4px; background: linear-gradient(145deg, #343633, #171918 48%, #252724); }.digit-flap-bottom { clip-path: inset(50% 0 0 0); transform-origin: 50% 50%; border-radius: 4px; background: linear-gradient(145deg, #282b29, #111313 60%, #202220); transform: rotateX(90deg); }
+.is-flipping .digit-flap-top { animation: flip-top .42s cubic-bezier(.37,.01,.2,1) forwards; }.is-flipping .digit-flap-bottom { animation: flip-bottom .42s cubic-bezier(.37,.01,.2,1) .2s forwards; }
+@keyframes flip-top { 0% { transform: rotateX(0); } 100% { transform: rotateX(-90deg); } }
+@keyframes flip-bottom { 0% { transform: rotateX(90deg); } 100% { transform: rotateX(0); } }
+.site-footer { margin-top: auto; padding-top: 22px; color: #65655f; }.footer-rule { flex: 1; height: 1px; margin: 0 22px; background: #292a27; }
+@media (max-width: 640px) { .clock-page { padding: 20px 14px 18px; }.site-header { font-size: 8px; }.header-status { max-width: 150px; text-align: right; line-height: 1.6; }.subtitle { margin-bottom: 30px; font-size: 11px; }.clock-frame-top, .clock-frame-bottom { font-size: 7px; letter-spacing: .1em; }.clock-frame-bottom { margin-top: 16px; }.clock-display { gap: 4px; }.unit-divider { font-size: 23px; }.unit-label { font-size: 7px; letter-spacing: .12em; margin-top: 9px; }.flip-digit { width: clamp(35px, 17vw, 64px); height: clamp(50px, 24vw, 88px); font-size: clamp(39px, 20vw, 70px); } }
+@media (prefers-reduced-motion: reduce) { .is-flipping .digit-flap { animation: none; } }
