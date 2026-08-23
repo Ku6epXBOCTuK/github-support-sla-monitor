@@ -1,4 +1,10 @@
 // @ts-check
+import { loadEnv } from 'vite'
 import { defineConfig } from 'astro/config'
 
-export default defineConfig({})
+const mode = process.argv.includes('build') ? 'production' : 'development'
+const env = loadEnv(mode, process.cwd(), '')
+
+export default defineConfig({
+  base: env.PUBLIC_BASE_PATH || '/',
+})
