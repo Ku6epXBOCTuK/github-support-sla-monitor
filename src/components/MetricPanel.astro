@@ -1,0 +1,24 @@
+---
+interface Props {
+  label: string;
+  valueId: string;
+  value: string;
+  sub: string;
+  subId?: string;
+  accent: "gold" | "red";
+  stagger: string;
+  danger?: boolean;
+  valueClass?: string;
+}
+
+const { label, valueId, value, sub, subId, accent, stagger, danger = false, valueClass } = Astro.props;
+---
+
+<article class:list={["panel", "metric-panel", `panel-stagger-${stagger}`]}>
+  <span class:list={["metric-rule", `metric-rule-${accent}`]} aria-hidden="true"></span>
+  <div class="panel-body">
+    <div class="metric-label">{label}</div>
+    <div class:list={["metric-value", valueClass, danger && "metric-value-danger"]} id={valueId}>{value}</div>
+    <div class="metric-sub" id={subId}>{sub}</div>
+  </div>
+</article>

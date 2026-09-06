@@ -1,0 +1,184 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Panel from "../components/Panel.astro";
+import MetricPanel from "../components/MetricPanel.astro";
+
+const base = import.meta.env.BASE_URL.replace(/\/+$/, "");
+---
+
+<Layout
+  title="SLA Monitor — Ticket #4549142"
+  description="Real-time SLA monitoring panel for GitHub support ticket #4549142."
+>
+  <main class="dash-page">
+    <header class="dash-header">
+      <div class="dash-header-left">
+        <a class="back-link" href={`${base}/`}>&larr; BACK TO TIMER</a>
+        <span class="header-sep" aria-hidden="true"></span>
+        <span class="dash-name">SLA&nbsp;MONITOR</span>
+        <span class="ticket-chip">#4549142</span>
+      </div>
+      <div class="dash-header-right">
+        <span class="status-badge"><span class="badge-dot"></span>NO RESPONSE</span>
+        <span class="live-clock" id="live-clock">--:--:--</span>
+      </div>
+    </header>
+
+    <section class="metrics-row" aria-label="Key metrics">
+      <MetricPanel label="TIME ELAPSED" valueId="metric-elapsed" value="0d 00h 00m" sub="SINCE --" subId="metric-since" accent="gold" stagger="1" />
+      <MetricPanel label="LAST ACTIVITY" valueId="metric-last-activity" value="--" sub="EVENT: CONTACT AGAIN" accent="gold" stagger="2" />
+      <MetricPanel label="RESPONSE WAIT" valueId="metric-response-wait" value="0d 00h" sub="LAST REPLY: NONE" accent="red" stagger="3" danger />
+      <MetricPanel label="SUPPORT COMMENTS" valueId="metric-comments" value="0" sub="0 FROM SUPPORT" accent="gold" stagger="4" danger />
+    </section>
+
+    <section class="charts-grid" aria-label="Response analytics">
+      <Panel title="RESPONSE RATE" meta="0%">
+        <div class="gauge-wrap">
+          <canvas id="chart-rate" aria-label="Human response rate gauge"></canvas>
+          <div class="gauge-center"><span>0%</span><small>HUMAN REPLIES</small></div>
+        </div>
+      </Panel>
+
+      <Panel title="RESPONSE PERCENTILES" meta="SINGLE SAMPLE">
+        <div class="chart-wrap">
+          <canvas id="chart-percentiles" aria-label="Flat percentiles of time to human response"></canvas>
+        </div>
+      </Panel>
+
+      <Panel title="RESPONSES PER DAY" meta="SINCE --" metaId="chart-since">
+        <div class="chart-wrap">
+          <canvas id="chart-per-day" aria-label="Replies per day since ticket creation"></canvas>
+        </div>
+      </Panel>
+
+      <Panel title="CUMULATIVE WAIT" meta="LIVE">
+        <div class="chart-wrap">
+          <canvas id="chart-wait" aria-label="Cumulative days without human response"></canvas>
+        </div>
+      </Panel>
+    </section>
+
+    <section class="bottom-row" aria-label="Case details breakdown">
+      <Panel title="COMMENTS LOG">
+        <div class="panel-body">
+          <div class="log-list" id="comments-log"></div>
+        </div>
+      </Panel>
+
+      <Panel title="STATUS TIMELINE">
+        <div class="panel-body">
+          <div class="timeline-list" id="status-timeline"></div>
+        </div>
+      </Panel>
+
+      <Panel title="CASE DETAILS">
+        <div class="panel-body">
+          <table class="details-table">
+            <tbody>
+              <tr><td class="details-key">TICKET</td><td class="details-value">#4549142</td></tr>
+              <tr><td class="details-key">AUTHOR</td><td class="details-value">Ku6epXBOCTuK</td></tr>
+              <tr><td class="details-key">CONTEXT</td><td class="details-value details-value-gold">FREE / UNSLAVED</td></tr>
+              <tr><td class="details-key">ASSIGNEE</td><td class="details-value">&mdash;</td></tr>
+              <tr><td class="details-key">MILESTONE</td><td class="details-value">&mdash;</td></tr>
+              <tr><td class="details-key">STATUS</td><td class="details-value details-value-danger">OPEN / UNANSWERED</td></tr>
+              <tr><td class="details-key">CREATED</td><td class="details-value" id="details-created">--</td></tr>
+              <tr><td class="details-key">LAST COMMENT</td><td class="details-value" id="details-last-comment">--</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </Panel>
+    </section>
+
+    <footer class="dash-footer">
+      <div class="dash-footer-inner">
+        <span>DATA SOURCE: ISSUE TRACKER</span>
+        <span>TICKET #4549142</span>
+        <span>LAST UPDATED: <span id="last-updated">--</span></span>
+        <span>REFRESH: 60S</span>
+      </div>
+    </footer>
+  </main>
+
+  <script is:inline src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+  <script>
+    import {
+      AUTHOR,
+      EVENTS,
+      CREATED,
+      LAST_AUTHOR_MS,
+      LAST_AUTHOR_EVENT,
+      fmtClock,
+      fmtStamp,
+      fmtDate,
+      fmtElapsed,
+      fmtDaysHours,
+    } from "../data/caseData";
+    import { renderCharts } from "../lib/dashboardCharts";
+
+    function renderLog(): void {
+      const el = document.querySelector<HTMLElement>("#comments-log");
+      if (!el) return;
+      el.innerHTML =
+        EVENTS.map((e) => {
+          const cls = e.kind === "system" ? "log-author log-author-system" : "log-author";
+          const name = e.kind === "system" ? "SYSTEM" : AUTHOR;
+          return `<div class="log-line"><span class="log-time">[${fmtDate(e.at)}]</span><span class="${cls}">${name}</span><span class="log-text">${e.text}</span></div>`;
+        }).join("") +
+        `<div class="log-line log-line-pending"><span class="log-time">[NOW]</span><span class="log-author log-author-system">SYSTEM</span><span class="log-text">AWAITING RESPONSE &mdash; NO HUMAN REPLY RECORDED</span></div>`;
+    }
+
+    function renderTimeline(): void {
+      const el = document.querySelector<HTMLElement>("#status-timeline");
+      if (!el) return;
+      el.innerHTML =
+        EVENTS.map((e) => {
+          const dot = e.kind === "system" ? "timeline-dot" : "timeline-dot timeline-dot-muted";
+          const name = e.kind === "system" ? "SYSTEM" : AUTHOR;
+          return `<div class="timeline-item"><span class="${dot}"></span><span class="timeline-date">${fmtDate(e.at)}</span><span class="timeline-label">${e.label} <span class="timeline-by">&middot; ${name}</span></span></div>`;
+        }).join("") +
+        `<div class="timeline-item"><span class="timeline-dot timeline-dot-danger"></span><span class="timeline-date">NOW</span><span class="timeline-label timeline-label-danger">AWAITING RESPONSE</span></div>`;
+    }
+
+    function updateMetrics(now: number): void {
+      const elapsed = document.querySelector<HTMLElement>("#metric-elapsed");
+      const lastActivity = document.querySelector<HTMLElement>("#metric-last-activity");
+      const responseWait = document.querySelector<HTMLElement>("#metric-response-wait");
+      if (elapsed) elapsed.textContent = fmtElapsed(now);
+      if (lastActivity) lastActivity.textContent = fmtDaysHours(now, LAST_AUTHOR_MS);
+      if (responseWait) responseWait.textContent = fmtDaysHours(now, LAST_AUTHOR_MS);
+    }
+
+    function tick(): void {
+      const clock = document.querySelector<HTMLElement>("#live-clock");
+      if (clock) clock.textContent = fmtClock(new Date());
+      updateMetrics(Date.now());
+    }
+
+    function refresh(): void {
+      const updated = document.querySelector<HTMLElement>("#last-updated");
+      if (updated) updated.textContent = fmtStamp(new Date());
+      renderCharts(Date.now());
+    }
+
+    const detailsLastComment = document.querySelector<HTMLElement>("#details-last-comment");
+    if (detailsLastComment) detailsLastComment.textContent = fmtDate(LAST_AUTHOR_EVENT.at);
+
+    const detailsCreated = document.querySelector<HTMLElement>("#details-created");
+    if (detailsCreated) detailsCreated.textContent = fmtDate(CREATED);
+
+    const metricSince = document.querySelector<HTMLElement>("#metric-since");
+    if (metricSince) metricSince.textContent = `SINCE ${fmtDate(CREATED)}`;
+
+    const chartSince = document.querySelector<HTMLElement>("#chart-since");
+    if (chartSince) chartSince.textContent = `SINCE ${fmtDate(CREATED)}`;
+
+    renderLog();
+    renderTimeline();
+    tick();
+    refresh();
+
+    window.setInterval(tick, 1000);
+    window.setInterval(refresh, 60000);
+  </script>
+</Layout>

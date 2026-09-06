@@ -1,0 +1,20 @@
+---
+interface Props {
+  title: string;
+  meta?: string;
+  metaId?: string;
+}
+
+const { title, meta, metaId } = Astro.props;
+---
+
+<article class="panel">
+  <div class="panel-head">
+    <span class="panel-title">{title}</span>
+    <span class="panel-head-right">
+      {meta && <span class="panel-meta" id={metaId}>{meta}</span>}
+      <span class="panel-menu" aria-hidden="true"><i></i><i></i><i></i></span>
+    </span>
+  </div>
+  <slot />
+</article>

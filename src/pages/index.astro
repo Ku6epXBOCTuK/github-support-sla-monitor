@@ -1,6 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 
+const base = import.meta.env.BASE_URL.replace(/\/+$/, "");
 const START_DATE = new Date("2026-07-09T20:00:00+05:00");
 
 function getElapsedTime(): { days: number; hours: number; minutes: number; seconds: number } {
@@ -43,7 +44,10 @@ const startLabel = START_DATE.toLocaleDateString("en-US", {
 
     <header class="site-header">
       <div class="brand-mark"><span class="brand-dot"></span> GITHUB TICKET ID: 4549142</div>
-      <div class="header-status"><span class="status-pulse"></span> STATUS: AWAITING RESPONSE</div>
+      <div class="header-actions">
+        <a class="nav-link" href={`${base}/dashboard`}>DASHBOARD →</a>
+        <div class="header-status"><span class="status-pulse"></span> STATUS: AWAITING RESPONSE</div>
+      </div>
     </header>
 
     <section class="hero-content" aria-labelledby="page-title">
