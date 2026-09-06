@@ -1,7 +1,7 @@
 {
-  "name": "github-tracker",
+  "name": "github-support-sla-monitor",
   "version": "0.1.0",
-  "description": "Flip-clock tracker of time elapsed since a GitHub support ticket",
+  "description": "GitHub support ticket sla monitor dashboard and flip-clock timer",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
