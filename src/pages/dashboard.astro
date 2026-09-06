@@ -112,6 +112,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, "");
       AUTHOR,
       EVENTS,
       CREATED,
+      CREATED_MS,
       LAST_AUTHOR_MS,
       LAST_AUTHOR_EVENT,
       fmtClock,
@@ -152,7 +153,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, "");
       const responseWait = document.querySelector<HTMLElement>("#metric-response-wait");
       if (elapsed) elapsed.textContent = fmtElapsed(now);
       if (lastActivity) lastActivity.textContent = fmtDaysHours(now, LAST_AUTHOR_MS);
-      if (responseWait) responseWait.textContent = fmtDaysHours(now, LAST_AUTHOR_MS);
+      if (responseWait) responseWait.textContent = fmtDaysHours(now, CREATED_MS);
     }
 
     function tick(): void {
