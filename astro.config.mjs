@@ -6,5 +6,5 @@ const mode = process.argv.includes('build') ? 'production' : 'development'
 const env = loadEnv(mode, process.cwd(), '')
 
 export default defineConfig({
-  base: env.PUBLIC_BASE_PATH || '/',
+  base: process.env.VERCEL ? '/' : (env.PUBLIC_BASE_PATH || '/'),
 })
