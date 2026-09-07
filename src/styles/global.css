@@ -63,17 +63,73 @@ body {
   gap: 16px;
 }
 .nav-link {
-  color: #b1aca1;
+  display: inline-block;
+  position: relative;
+  overflow: hidden;
+  color: var(--gold);
   text-decoration: none;
-  border-bottom: 1px dotted rgba(185, 154, 98, 0.5);
-  padding-bottom: 2px;
+  letter-spacing: 0.22em;
+  border: 1px solid rgba(185, 154, 98, 0.55);
+  background: rgba(185, 154, 98, 0.08);
+  padding: 7px 14px 6px;
   transition:
-    color 0.2s,
-    border-color 0.2s;
+    background 0.2s,
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 .nav-link:hover {
-  color: var(--gold);
-  border-bottom-color: var(--gold);
+  background: rgba(185, 154, 98, 0.16);
+  border-color: var(--gold);
+  box-shadow: 0 0 14px rgba(185, 154, 98, 0.25);
+}
+.nav-link:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 2px;
+}
+.nav-arrow {
+  display: inline-block;
+  transition: transform 0.2s;
+}
+.nav-link:hover .nav-arrow {
+  transform: translateX(3px);
+}
+/* shared: one quick light sweep across the button every minute */
+.nav-link::after,
+.back-link::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -70%;
+  width: 55%;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent,
+    rgba(255, 244, 214, 0.18) 42%,
+    rgba(255, 244, 214, 0.32) 50%,
+    rgba(255, 244, 214, 0.18) 58%,
+    transparent
+  );
+  transform: translateX(0) skewX(-18deg);
+  animation: shimmer-sweep 30s linear infinite;
+}
+@keyframes shimmer-sweep {
+  0% {
+    transform: translateX(0) skewX(-18deg);
+  }
+  1.5% {
+    transform: translateX(320%) skewX(-18deg);
+  }
+  100% {
+    transform: translateX(320%) skewX(-18deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-link::after,
+  .back-link::after {
+    animation: none;
+  }
 }
 .brand-mark {
   display: flex;
@@ -330,6 +386,7 @@ h1 em {
   }
   .nav-link {
     font-size: 8px;
+    padding: 5px 10px 4px;
   }
   .header-status {
     max-width: 150px;
@@ -512,15 +569,37 @@ h1 em {
   min-width: 0;
 }
 .back-link {
-  color: #b1aca1;
+  display: inline-block;
+  position: relative;
+  overflow: hidden;
+  color: var(--gold);
   font: 10px var(--font-mono-local);
-  letter-spacing: 0.18em;
+  letter-spacing: 0.2em;
   text-decoration: none;
   white-space: nowrap;
-  transition: color 0.2s;
+  border: 1px solid rgba(185, 154, 98, 0.55);
+  background: rgba(185, 154, 98, 0.08);
+  padding: 6px 12px 5px;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 .back-link:hover {
-  color: var(--gold);
+  background: rgba(185, 154, 98, 0.16);
+  border-color: var(--gold);
+  box-shadow: 0 0 14px rgba(185, 154, 98, 0.25);
+}
+.back-link:focus-visible {
+  outline: 1px solid var(--gold);
+  outline-offset: 2px;
+}
+.back-arrow {
+  display: inline-block;
+  transition: transform 0.2s;
+}
+.back-link:hover .back-arrow {
+  transform: translateX(-3px);
 }
 .header-sep {
   width: 1px;
