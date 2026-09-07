@@ -121,7 +121,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, "");
       fmtElapsed,
       fmtDaysHours,
     } from "../data/caseData";
-    import { renderCharts } from "../lib/dashboardCharts";
+    import { initCharts, updateCharts } from "../lib/dashboardCharts";
 
     function renderLog(): void {
       const el = document.querySelector<HTMLElement>("#comments-log");
@@ -165,7 +165,7 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, "");
     function refresh(): void {
       const updated = document.querySelector<HTMLElement>("#last-updated");
       if (updated) updated.textContent = fmtStamp(new Date());
-      renderCharts(Date.now());
+      updateCharts(Date.now());
     }
 
     const detailsLastComment = document.querySelector<HTMLElement>("#details-last-comment");
@@ -183,7 +183,11 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, "");
     renderLog();
     renderTimeline();
     tick();
-    refresh();
+
+    const lastUpdated = document.querySelector<HTMLElement>("#last-updated");
+    if (lastUpdated) lastUpdated.textContent = fmtStamp(new Date());
+
+    initCharts();
 
     window.setInterval(tick, 1000);
     window.setInterval(refresh, 60000);

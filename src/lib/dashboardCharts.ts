@@ -14,19 +14,22 @@ const C = {
   legend: "#8b8a83",
 };
 
-type ChartCtor = new (ctx: CanvasRenderingContext2D, config: object) => unknown;
+type ChartCtor = new (ctx: CanvasRenderingContext2D, config: object) => ChartLike;
+
+interface ChartLike {
+  data: { labels?: unknown[]; datasets: { data: number[] }[] };
+  update(mode?: string): void;
+}
 
 function getCtor(): ChartCtor | null {
   const ChartClass = (window as unknown as { Chart?: unknown }).Chart;
   return ChartClass ? (ChartClass as ChartCtor) : null;
 }
 
-let instances: { destroy(): void }[] = [];
-
-function dispose(): void {
-  for (const instance of instances) instance.destroy();
-  instances = [];
-}
+let percentiles: ChartLike | null = null;
+let perDay: ChartLike | null = null;
+let wait: ChartLike | null = null;
+let percentilesWait = 0;
 
 function tooltip(): Record<string, unknown> {
   return {
@@ -45,72 +48,166 @@ function buildRate(canvas: HTMLCanvasElement): void {
   const ctor = getCtor();
   const ctx = canvas.getContext("2d");
   if (!ctor || !ctx) return;
-  instances.push(
-    new ctor(ctx, {
-      type: "doughnut",
-      data: {
-        labels: ["HUMAN REPLIES"],
-        datasets: [{ data: [0, 100], backgroundColor: [C.red, C.track], borderWidth: 0 }],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: "74%",
-        rotation: -90,
-        circumference: 180,
-        plugins: { legend: { display: false }, tooltip: { enabled: false } },
-      },
-    }),
-  );
+  new ctor(ctx, {
+    type: "doughnut",
+    data: {
+      labels: ["HUMAN REPLIES"],
+      datasets: [{ data: [0, 100], backgroundColor: [C.red, C.track], borderWidth: 0 }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: "74%",
+      rotation: -90,
+      circumference: 180,
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+    },
+  });
 }
 
-function buildPercentiles(canvas: HTMLCanvasElement, now: number): void {
+function buildPercentiles(canvas: HTMLCanvasElement, now: number): ChartLike | null {
   const ctor = getCtor();
   const ctx = canvas.getContext("2d");
-  if (!ctor || !ctx) return;
-  const wait = Number(daysFloat(now, CREATED_MS).toFixed(1));
+  if (!ctor || !ctx) return null;
+  const waitVal = Number(daysFloat(now, CREATED_MS).toFixed(1));
+  percentilesWait = waitVal;
   const datasets = [
-    { label: "AVG", data: [wait, wait], borderColor: C.gold, borderWidth: 1, borderDash: [10, 6], pointRadius: 0, tension: 0 },
-    { label: "P50", data: [wait, wait], borderColor: C.red, borderWidth: 1.5, pointRadius: 0, tension: 0 },
-    { label: "P90", data: [wait, wait], borderColor: C.redP90, borderWidth: 1.5, borderDash: [5, 4], pointRadius: 0, tension: 0 },
-    { label: "P99", data: [wait, wait], borderColor: C.redP99, borderWidth: 1.5, borderDash: [2, 4], pointRadius: 0, tension: 0 },
+    { label: "AVG", data: [waitVal, waitVal], borderColor: C.gold, borderWidth: 1, borderDash: [10, 6], pointRadius: 0, tension: 0 },
+    { label: "P50", data: [waitVal, waitVal], borderColor: C.red, borderWidth: 1.5, pointRadius: 0, tension: 0 },
+    { label: "P90", data: [waitVal, waitVal], borderColor: C.redP90, borderWidth: 1.5, borderDash: [5, 4], pointRadius: 0, tension: 0 },
+    { label: "P99", data: [waitVal, waitVal], borderColor: C.redP99, borderWidth: 1.5, borderDash: [2, 4], pointRadius: 0, tension: 0 },
   ];
-  instances.push(
-    new ctor(ctx, {
-      type: "line",
-      data: { labels: ["START", "TODAY"], datasets },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: { mode: "index", intersect: false },
-        plugins: {
-          legend: { display: true, position: "bottom", align: "start", labels: { color: C.legend, boxWidth: 12, font: { family: FONT, size: 9 } } },
-          tooltip: {
-            ...tooltip(),
-            callbacks: {
-              label: (item) => ` ${item.dataset.label || ""}: ${wait}d (SINGLE SAMPLE)`,
-            },
-          },
-        },
-        scales: {
-          x: { ticks: { color: C.axis, font: { family: FONT, size: 9 }, maxRotation: 0 }, grid: { color: C.grid }, border: { color: C.border } },
-          y: {
-            beginAtZero: true,
-            title: { display: true, text: "DAYS", color: C.axis, font: { family: FONT, size: 8 } },
-            ticks: { color: C.axis, font: { family: FONT, size: 9 } },
-            grid: { color: C.grid },
-            border: { color: C.border },
+  return new ctor(ctx, {
+    type: "line",
+    data: { labels: ["START", "TODAY"], datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: { display: true, position: "bottom", align: "start", labels: { color: C.legend, boxWidth: 12, font: { family: FONT, size: 9 } } },
+        tooltip: {
+          ...tooltip(),
+          callbacks: {
+            label: (item) => ` ${item.dataset.label || ""}: ${percentilesWait}d (SINGLE SAMPLE)`,
           },
         },
       },
-    }),
-  );
+      scales: {
+        x: { ticks: { color: C.axis, font: { family: FONT, size: 9 }, maxRotation: 0 }, grid: { color: C.grid }, border: { color: C.border } },
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: "DAYS", color: C.axis, font: { family: FONT, size: 8 } },
+          ticks: { color: C.axis, font: { family: FONT, size: 9 } },
+          grid: { color: C.grid },
+          border: { color: C.border },
+        },
+      },
+    },
+  });
 }
 
-function buildPerDay(canvas: HTMLCanvasElement, now: number): void {
+function buildPerDay(canvas: HTMLCanvasElement): ChartLike | null {
   const ctor = getCtor();
   const ctx = canvas.getContext("2d");
-  if (!ctor || !ctx) return;
+  if (!ctor || !ctx) return null;
+  const axis = {
+    ticks: { color: C.axis, font: { family: FONT, size: 8 }, maxTicksLimit: 10, maxRotation: 0 },
+    grid: { color: C.grid },
+    border: { color: C.border },
+  };
+  return new ctor(ctx, {
+    type: "bar",
+    data: {
+      labels: [],
+      datasets: [
+        { label: "MY MESSAGES", data: [], backgroundColor: C.gold, borderColor: C.gold, borderWidth: 1 },
+        { label: "BOT REACTIONS", data: [], backgroundColor: C.muted, borderColor: C.muted, borderWidth: 1 },
+        { label: "HUMAN REPLIES", data: [], backgroundColor: C.red, borderColor: C.red, borderWidth: 1 },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: { display: true, position: "bottom", align: "start", labels: { color: C.legend, boxWidth: 12, font: { family: FONT, size: 9 } } },
+        tooltip: tooltip(),
+      },
+      scales: {
+        x: axis,
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: "REPLIES", color: C.axis, font: { family: FONT, size: 8 } },
+          ticks: { color: C.axis, font: { family: FONT, size: 9 }, precision: 0 },
+          grid: { color: C.grid },
+          border: { color: C.border },
+        },
+      },
+    },
+  });
+}
+
+function buildWait(canvas: HTMLCanvasElement): ChartLike | null {
+  const ctor = getCtor();
+  const ctx = canvas.getContext("2d");
+  if (!ctor || !ctx) return null;
+  const grad = ctx.createLinearGradient(0, 0, 0, 200);
+  grad.addColorStop(0, "rgba(231,76,60,0.28)");
+  grad.addColorStop(1, "rgba(231,76,60,0)");
+  return new ctor(ctx, {
+    type: "line",
+    data: {
+      labels: [],
+      datasets: [
+        {
+          label: "DAYS WAITED",
+          data: [],
+          borderColor: C.red,
+          borderWidth: 1.5,
+          backgroundColor: grad,
+          fill: true,
+          tension: 0,
+          pointRadius: 0,
+          pointBackgroundColor: C.red,
+          pointHoverRadius: 3,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: { display: true, position: "bottom", align: "start", labels: { color: C.legend, boxWidth: 12, font: { family: FONT, size: 9 } } },
+        tooltip: tooltip(),
+      },
+      scales: {
+        x: {
+          ticks: { color: C.axis, font: { family: FONT, size: 8 }, maxTicksLimit: 10, maxRotation: 0 },
+          grid: { color: C.grid },
+          border: { color: C.border },
+        },
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: "DAYS", color: C.axis, font: { family: FONT, size: 8 } },
+          ticks: { color: C.axis, font: { family: FONT, size: 9 } },
+          grid: { color: C.grid },
+          border: { color: C.border },
+        },
+      },
+    },
+  });
+}
+
+function updatePercentiles(chart: ChartLike, now: number): void {
+  const waitVal = Number(daysFloat(now, CREATED_MS).toFixed(1));
+  percentilesWait = waitVal;
+  for (const ds of chart.data.datasets) ds.data = [waitVal, waitVal];
+  chart.update();
+}
+
+function updatePerDay(chart: ChartLike, now: number): void {
   const days = daysCeil(now);
   const mine: number[] = new Array(days).fill(0);
   const bot: number[] = new Array(days).fill(0);
@@ -122,110 +219,34 @@ function buildPerDay(canvas: HTMLCanvasElement, now: number): void {
     else bot[idx]++;
   }
   const labels = Array.from({ length: days }, (_, i) => `D${i}`);
-  const axis = {
-    ticks: { color: C.axis, font: { family: FONT, size: 8 }, maxTicksLimit: 10, maxRotation: 0 },
-    grid: { color: C.grid },
-    border: { color: C.border },
-  };
-  instances.push(
-    new ctor(ctx, {
-      type: "bar",
-      data: {
-        labels,
-        datasets: [
-          { label: "MY MESSAGES", data: mine, backgroundColor: C.gold, borderColor: C.gold, borderWidth: 1 },
-          { label: "BOT REACTIONS", data: bot, backgroundColor: C.muted, borderColor: C.muted, borderWidth: 1 },
-          { label: "HUMAN REPLIES", data: human, backgroundColor: C.red, borderColor: C.red, borderWidth: 1 },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: { mode: "index", intersect: false },
-        plugins: {
-          legend: { display: true, position: "bottom", align: "start", labels: { color: C.legend, boxWidth: 12, font: { family: FONT, size: 9 } } },
-          tooltip: tooltip(),
-        },
-        scales: {
-          x: axis,
-          y: {
-            beginAtZero: true,
-            title: { display: true, text: "REPLIES", color: C.axis, font: { family: FONT, size: 8 } },
-            ticks: { color: C.axis, font: { family: FONT, size: 9 }, precision: 0 },
-            grid: { color: C.grid },
-            border: { color: C.border },
-          },
-        },
-      },
-    }),
-  );
+  chart.data.labels = labels;
+  for (let i = 0; i < chart.data.datasets.length; i++) {
+    chart.data.datasets[i].data = [mine, bot, human][i];
+  }
+  chart.update();
 }
 
-function buildWait(canvas: HTMLCanvasElement, now: number): void {
-  const ctor = getCtor();
-  const ctx = canvas.getContext("2d");
-  if (!ctor || !ctx) return;
+function updateWait(chart: ChartLike, now: number): void {
   const days = daysCeil(now);
-  const data = Array.from({ length: days }, (_, i) => i);
-  const labels = Array.from({ length: days }, (_, i) => `D${i}`);
-  const grad = ctx.createLinearGradient(0, 0, 0, 200);
-  grad.addColorStop(0, "rgba(231,76,60,0.28)");
-  grad.addColorStop(1, "rgba(231,76,60,0)");
-  instances.push(
-    new ctor(ctx, {
-      type: "line",
-      data: {
-        labels,
-        datasets: [
-          {
-            label: "DAYS WAITED",
-            data,
-            borderColor: C.red,
-            borderWidth: 1.5,
-            backgroundColor: grad,
-            fill: true,
-            tension: 0,
-            pointRadius: 0,
-            pointBackgroundColor: C.red,
-            pointHoverRadius: 3,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: { mode: "index", intersect: false },
-        plugins: {
-          legend: { display: true, position: "bottom", align: "start", labels: { color: C.legend, boxWidth: 12, font: { family: FONT, size: 9 } } },
-          tooltip: tooltip(),
-        },
-        scales: {
-          x: {
-            ticks: { color: C.axis, font: { family: FONT, size: 8 }, maxTicksLimit: 10, maxRotation: 0 },
-            grid: { color: C.grid },
-            border: { color: C.border },
-          },
-          y: {
-            beginAtZero: true,
-            title: { display: true, text: "DAYS", color: C.axis, font: { family: FONT, size: 8 } },
-            ticks: { color: C.axis, font: { family: FONT, size: 9 } },
-            grid: { color: C.grid },
-            border: { color: C.border },
-          },
-        },
-      },
-    }),
-  );
+  chart.data.labels = Array.from({ length: days }, (_, i) => `D${i}`);
+  chart.data.datasets[0].data = Array.from({ length: days }, (_, i) => i);
+  chart.update();
 }
 
-export function renderCharts(now: number): void {
-  dispose();
+export function initCharts(): void {
   const rate = document.querySelector<HTMLCanvasElement>("#chart-rate");
-  const percentiles = document.querySelector<HTMLCanvasElement>("#chart-percentiles");
-  const perDay = document.querySelector<HTMLCanvasElement>("#chart-per-day");
-  const wait = document.querySelector<HTMLCanvasElement>("#chart-wait");
+  const p = document.querySelector<HTMLCanvasElement>("#chart-percentiles");
+  const d = document.querySelector<HTMLCanvasElement>("#chart-per-day");
+  const w = document.querySelector<HTMLCanvasElement>("#chart-wait");
   if (rate) buildRate(rate);
-  if (percentiles) buildPercentiles(percentiles, now);
-  if (perDay) buildPerDay(perDay, now);
-  if (wait) buildWait(wait, now);
+  percentiles = p ? buildPercentiles(p, Date.now()) : null;
+  perDay = d ? buildPerDay(d) : null;
+  wait = w ? buildWait(w) : null;
+  updateCharts(Date.now());
+}
+
+export function updateCharts(now: number): void {
+  if (percentiles) updatePercentiles(percentiles, now);
+  if (perDay) updatePerDay(perDay, now);
+  if (wait) updateWait(wait, now);
 }
