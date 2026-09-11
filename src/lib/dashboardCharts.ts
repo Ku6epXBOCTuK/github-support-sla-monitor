@@ -1,4 +1,4 @@
-import { CREATED_MS, EVENTS, daysCeil, dayIndex, daysFloat } from "../data/caseData";
+import { CREATED_MS, RESOLVED_MS, EVENTS, daysCeil, dayIndex, daysFloat } from "../data/caseData";
 
 const FONT = "IBM Plex Mono";
 const C = {
@@ -52,7 +52,7 @@ function buildRate(canvas: HTMLCanvasElement): void {
     type: "doughnut",
     data: {
       labels: ["HUMAN REPLIES"],
-      datasets: [{ data: [0, 100], backgroundColor: [C.red, C.track], borderWidth: 0 }],
+      datasets: [{ data: [100, 0], backgroundColor: ["#2ecc71", C.track], borderWidth: 0 }],
     },
     options: {
       responsive: true,
@@ -216,6 +216,7 @@ function updatePerDay(chart: ChartLike, now: number): void {
     const idx = dayIndex(e.at.getTime());
     if (idx < 0 || idx >= days) continue;
     if (e.kind === "author") mine[idx]++;
+    else if (e.kind === "support") human[idx]++;
     else bot[idx]++;
   }
   const labels = Array.from({ length: days }, (_, i) => `D${i}`);
@@ -239,14 +240,15 @@ export function initCharts(): void {
   const d = document.querySelector<HTMLCanvasElement>("#chart-per-day");
   const w = document.querySelector<HTMLCanvasElement>("#chart-wait");
   if (rate) buildRate(rate);
-  percentiles = p ? buildPercentiles(p, Date.now()) : null;
+  percentiles = p ? buildPercentiles(p, Math.min(Date.now(), RESOLVED_MS)) : null;
   perDay = d ? buildPerDay(d) : null;
   wait = w ? buildWait(w) : null;
   updateCharts(Date.now());
 }
 
 export function updateCharts(now: number): void {
-  if (percentiles) updatePercentiles(percentiles, now);
-  if (perDay) updatePerDay(perDay, now);
-  if (wait) updateWait(wait, now);
+  const t = Math.min(now, RESOLVED_MS);
+  if (percentiles) updatePercentiles(percentiles, t);
+  if (perDay) updatePerDay(perDay, t);
+  if (wait) updateWait(wait, t);
 }

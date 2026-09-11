@@ -1,9 +1,10 @@
 export const CREATED = new Date("2026-07-09T20:00:00+05:00");
 export const AUTHOR = "Ku6epXBOCTuK";
+export const SUPPORT = "GITHUB SUPPORT";
 
 export interface CaseEvent {
   at: Date;
-  kind: "system" | "author";
+  kind: "system" | "author" | "support";
   label: string;
   text: string;
 }
@@ -12,13 +13,18 @@ export const EVENTS: CaseEvent[] = [
   { at: new Date("2026-07-09T20:00:05+05:00"), kind: "author", label: "TICKET CREATED", text: "Ticket #4549142 submitted." },
   { at: new Date("2026-07-09T20:00:05+05:00"), kind: "system", label: "AUTO-ACK SENT", text: "Instant automated confirmation of receipt sent by a bot." },
   { at: new Date("2026-09-07T00:54:00+05:00"), kind: "author", label: "CONTACT AGAIN", text: "Wrote to the ticket again today requesting an update." },
+  { at: new Date("2026-09-07T21:03:00+05:00"), kind: "system", label: "AUTO-REPLY RECEIVED", text: "Automated follow-up: \"Are you still in need of assistance with this?\"" },
+  { at: new Date("2026-09-07T21:10:00+05:00"), kind: "author", label: "STILL NEEDED", text: "Confirmed the appeal is still needed and asked for the reason of the account suspension." },
+  { at: new Date("2026-09-08T21:53:00+05:00"), kind: "support", label: "SUPPORT RESOLVED", text: "GitHub engineer: restrictions cleared, full access to GitHub restored." },
 ];
 
 export const CREATED_MS = CREATED.getTime();
+
+// the monitor freezes at the SUPPORT RESOLVED event — see the last entry of EVENTS
+export const RESOLVED_AT = EVENTS.find((e) => e.label === "SUPPORT RESOLVED")!.at;
+export const RESOLVED_MS = RESOLVED_AT.getTime();
+
 export const LAST_EVENT = EVENTS[EVENTS.length - 1];
-export const LAST_EVENT_MS = LAST_EVENT.at.getTime();
-export const LAST_AUTHOR_EVENT = [...EVENTS].reverse().find((e) => e.kind === "author")!;
-export const LAST_AUTHOR_MS = LAST_AUTHOR_EVENT.at.getTime();
 
 export function pad2(n: number): string {
   return String(n).padStart(2, "0");
@@ -34,14 +40,6 @@ export function fmtClock(d: Date): string {
 
 export function fmtStamp(d: Date): string {
   return d.toLocaleString("en-GB", { hour12: false, day: "2-digit", month: "short", year: "numeric" });
-}
-
-export function fmtElapsed(now: number): string {
-  const ms = Math.max(0, now - CREATED_MS);
-  const d = Math.floor(ms / 86400000);
-  const h = Math.floor((ms % 86400000) / 3600000);
-  const m = Math.floor((ms % 3600000) / 60000);
-  return `${pad2(d)}d ${pad2(h)}h ${pad2(m)}m`;
 }
 
 export function fmtDaysHours(now: number, ref: number): string {

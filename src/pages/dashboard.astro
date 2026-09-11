@@ -19,23 +19,25 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, "");
         <span class="ticket-chip">#4549142</span>
       </div>
       <div class="dash-header-right">
-        <span class="status-badge"><span class="badge-dot"></span>NO RESPONSE</span>
+        <span class="status-badge status-badge-resolved"><span class="badge-dot badge-dot-green"></span>RESOLVED &mdash; UNLOCKED</span>
         <span class="live-clock" id="live-clock">--:--:--</span>
       </div>
     </header>
 
     <section class="metrics-row" aria-label="Key metrics">
-      <MetricPanel label="TIME ELAPSED" valueId="metric-elapsed" value="0d 00h 00m" sub="SINCE --" subId="metric-since" accent="gold" stagger="1" />
-      <MetricPanel label="LAST ACTIVITY" valueId="metric-last-activity" value="--" sub="EVENT: CONTACT AGAIN" accent="gold" stagger="2" />
-      <MetricPanel label="RESPONSE WAIT" valueId="metric-response-wait" value="0d 00h" sub="LAST REPLY: NONE" accent="red" stagger="3" danger />
-      <MetricPanel label="SUPPORT COMMENTS" valueId="metric-comments" value="0" sub="0 FROM SUPPORT" accent="gold" stagger="4" danger />
+      <MetricPanel label="TIME TO FIRST HUMAN" valueId="metric-response-wait" value="61d 01h" sub="FROM OPEN TO FIRST HUMAN REPLY" accent="red" stagger="1" danger />
+      <MetricPanel label="ACCOUNT UNLOCKED" valueId="metric-unlocked" value="UNLOCKED" subId="metric-unlocked-sub" sub="RESOLVED --" accent="gold" stagger="2" valueClass="metric-value-green" />
+      <MetricPanel label="SUPPORT COMMENTS" valueId="metric-comments" value="1" subId="metric-comments-sub" sub="1 HUMAN FROM SUPPORT" accent="gold" stagger="3" />
+      <MetricPanel label="TICKET OPENED" valueId="metric-created" value="--" accent="gold" stagger="4" />
+      <MetricPanel label="FIRST REPLY BY" valueId="metric-first-reply" value="--" accent="gold" stagger="5" />
+      <MetricPanel label="CASE CLOSED" valueId="metric-closed" value="--" accent="gold" stagger="6" />
     </section>
 
     <section class="charts-grid" aria-label="Response analytics">
       <Panel title="RESPONSE RATE" meta="0%">
         <div class="gauge-wrap">
           <canvas id="chart-rate" aria-label="Human response rate gauge"></canvas>
-          <div class="gauge-center"><span>0%</span><small>HUMAN REPLIES</small></div>
+          <div class="gauge-center"><span class="gauge-center-green" id="gauge-value">100%</span><small id="gauge-sub">1/1 HUMAN REPLIES</small></div>
         </div>
       </Panel>
 
@@ -59,9 +61,9 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, "");
     </section>
 
     <aside class="dash-note">
-      DATA NOTE &mdash; ALL VALUES ARE REAL: <b>1</b> SUPPORT TICKET, VERIFIED MANUALLY BY THE AUTHOR. WITH A SINGLE
-      CASE THERE IS NO SPREAD, SO PERCENTILES ARE FLAT AND THE RESPONSE RATE READS <b>0%</b>. THE FLATNESS OF THE
-      CHARTS IS EXPECTED, NOT A BUG.
+      CASE NOTE &mdash; AFTER <b>61 DAYS</b> OF SILENCE ON A SUSPENSION APPEAL, AN AUTOMATED CHECK-IN ARRIVED ON
+      <b>SEP 7</b>. THE AUTHOR CONFIRMED THE SAME EVENING, AND ON <b>SEP 8</b> A GITHUB ENGINEER CLEARED THE
+      ACCOUNT RESTRICTIONS. THE CASE IS RESOLVED; ALL VALUES ON THIS PAGE ARE FROZEN AT THE MOMENT OF RESOLUTION.
     </aside>
 
     <section class="bottom-row" aria-label="Case details breakdown">
@@ -84,9 +86,9 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, "");
               <tr><td class="details-key">TICKET</td><td class="details-value">#4549142</td></tr>
               <tr><td class="details-key">AUTHOR</td><td class="details-value">Ku6epXBOCTuK</td></tr>
               <tr><td class="details-key">CONTEXT</td><td class="details-value details-value-gold">FREE / UNSLAVED</td></tr>
-              <tr><td class="details-key">ASSIGNEE</td><td class="details-value">&mdash;</td></tr>
-              <tr><td class="details-key">MILESTONE</td><td class="details-value">&mdash;</td></tr>
-              <tr><td class="details-key">STATUS</td><td class="details-value details-value-danger">OPEN / UNANSWERED</td></tr>
+              <tr><td class="details-key">RESOLVED BY</td><td class="details-value">GITHUB SUPPORT TEAM</td></tr>
+              <tr><td class="details-key">UNLOCKED</td><td class="details-value details-value-green" id="details-unlocked">--</td></tr>
+              <tr><td class="details-key">STATUS</td><td class="details-value details-value-green">RESOLVED / UNLOCKED</td></tr>
               <tr><td class="details-key">CREATED</td><td class="details-value" id="details-created">--</td></tr>
               <tr><td class="details-key">LAST COMMENT</td><td class="details-value" id="details-last-comment">--</td></tr>
             </tbody>
@@ -112,27 +114,25 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, "");
       AUTHOR,
       EVENTS,
       CREATED,
-      CREATED_MS,
-      LAST_AUTHOR_MS,
-      LAST_AUTHOR_EVENT,
+      RESOLVED_AT,
+      LAST_EVENT,
       fmtClock,
       fmtStamp,
       fmtDate,
-      fmtElapsed,
       fmtDaysHours,
     } from "../data/caseData";
     import { initCharts, updateCharts } from "../lib/dashboardCharts";
 
+    const KIND_NAME: Record<string, string> = { system: "SYSTEM", author: AUTHOR, support: "GITHUB SUPPORT" };
+
     function renderLog(): void {
       const el = document.querySelector<HTMLElement>("#comments-log");
       if (!el) return;
-      el.innerHTML =
-        EVENTS.map((e) => {
-          const cls = e.kind === "system" ? "log-author log-author-system" : "log-author";
-          const name = e.kind === "system" ? "SYSTEM" : AUTHOR;
-          return `<div class="log-line"><span class="log-time">[${fmtDate(e.at)}]</span><span class="${cls}">${name}</span><span class="log-text">${e.text}</span></div>`;
-        }).join("") +
-        `<div class="log-line log-line-pending"><span class="log-time">[NOW]</span><span class="log-author log-author-system">SYSTEM</span><span class="log-text">AWAITING RESPONSE &mdash; NO HUMAN REPLY RECORDED</span></div>`;
+      el.innerHTML = EVENTS.map((e) => {
+        const cls = e.kind === "system" ? "log-author log-author-system" : e.kind === "support" ? "log-author log-author-support" : "log-author";
+        const name = KIND_NAME[e.kind];
+        return `<div class="log-line"><span class="log-time">[${fmtDate(e.at)}]</span><span class="${cls}">${name}</span><span class="log-text">${e.text}</span></div>`;
+      }).join("");
     }
 
     function renderTimeline(): void {
@@ -140,52 +140,63 @@ const base = import.meta.env.BASE_URL.replace(/\/+$/, "");
       if (!el) return;
       el.innerHTML =
         EVENTS.map((e) => {
-          const dot = e.kind === "system" ? "timeline-dot" : "timeline-dot timeline-dot-muted";
-          const name = e.kind === "system" ? "SYSTEM" : AUTHOR;
+          const dot = e.kind === "system" ? "timeline-dot timeline-dot-muted" : "timeline-dot";
+          const name = KIND_NAME[e.kind];
           return `<div class="timeline-item"><span class="${dot}"></span><span class="timeline-date">${fmtDate(e.at)}</span><span class="timeline-label">${e.label} <span class="timeline-by">&middot; ${name}</span></span></div>`;
         }).join("") +
-        `<div class="timeline-item"><span class="timeline-dot timeline-dot-danger"></span><span class="timeline-date">NOW</span><span class="timeline-label timeline-label-danger">AWAITING RESPONSE</span></div>`;
+        `<div class="timeline-item"><span class="timeline-dot timeline-dot-green"></span><span class="timeline-date">${fmtDate(RESOLVED_AT)}</span><span class="timeline-label timeline-label-green">CASE CLOSED &middot; MONITOR FROZEN</span></div>`;
     }
 
-    function updateMetrics(now: number): void {
-      const elapsed = document.querySelector<HTMLElement>("#metric-elapsed");
-      const lastActivity = document.querySelector<HTMLElement>("#metric-last-activity");
+    function updateMetrics(): void {
       const responseWait = document.querySelector<HTMLElement>("#metric-response-wait");
-      if (elapsed) elapsed.textContent = fmtElapsed(now);
-      if (lastActivity) lastActivity.textContent = fmtDaysHours(now, LAST_AUTHOR_MS);
-      if (responseWait) responseWait.textContent = fmtDaysHours(now, CREATED_MS);
+      if (responseWait) responseWait.textContent = fmtDaysHours(RESOLVED_AT.getTime(), CREATED.getTime());
+
+      const unlockedSub = document.querySelector<HTMLElement>("#metric-unlocked-sub");
+      if (unlockedSub) unlockedSub.textContent = `AT ${fmtDate(RESOLVED_AT)}`;
+
+      const commentsSub = document.querySelector<HTMLElement>("#metric-comments-sub");
+      if (commentsSub) commentsSub.textContent = `${EVENTS.filter((e) => e.kind === "support").length} HUMAN FROM SUPPORT`;
+
+      const created = document.querySelector<HTMLElement>("#metric-created");
+      if (created) created.textContent = fmtDate(CREATED);
+
+      const firstReply = document.querySelector<HTMLElement>("#metric-first-reply");
+      if (firstReply) firstReply.textContent = "GITHUB SUPPORT";
+
+      const closed = document.querySelector<HTMLElement>("#metric-closed");
+      if (closed) closed.textContent = "CLOSED";
     }
 
     function tick(): void {
       const clock = document.querySelector<HTMLElement>("#live-clock");
       if (clock) clock.textContent = fmtClock(new Date());
-      updateMetrics(Date.now());
     }
 
     function refresh(): void {
       const updated = document.querySelector<HTMLElement>("#last-updated");
-      if (updated) updated.textContent = fmtStamp(new Date());
+      if (updated) updated.textContent = fmtStamp(RESOLVED_AT);
       updateCharts(Date.now());
     }
 
     const detailsLastComment = document.querySelector<HTMLElement>("#details-last-comment");
-    if (detailsLastComment) detailsLastComment.textContent = fmtDate(LAST_AUTHOR_EVENT.at);
+    if (detailsLastComment) detailsLastComment.textContent = fmtDate(LAST_EVENT.at);
+
+    const detailsUnlocked = document.querySelector<HTMLElement>("#details-unlocked");
+    if (detailsUnlocked) detailsUnlocked.textContent = fmtDate(RESOLVED_AT);
 
     const detailsCreated = document.querySelector<HTMLElement>("#details-created");
     if (detailsCreated) detailsCreated.textContent = fmtDate(CREATED);
-
-    const metricSince = document.querySelector<HTMLElement>("#metric-since");
-    if (metricSince) metricSince.textContent = `SINCE ${fmtDate(CREATED)}`;
 
     const chartSince = document.querySelector<HTMLElement>("#chart-since");
     if (chartSince) chartSince.textContent = `SINCE ${fmtDate(CREATED)}`;
 
     renderLog();
     renderTimeline();
+    updateMetrics();
     tick();
 
     const lastUpdated = document.querySelector<HTMLElement>("#last-updated");
-    if (lastUpdated) lastUpdated.textContent = fmtStamp(new Date());
+    if (lastUpdated) lastUpdated.textContent = fmtStamp(RESOLVED_AT);
 
     initCharts();
 

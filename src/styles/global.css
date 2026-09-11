@@ -225,6 +225,42 @@ h1 em {
   margin-top: 22px;
   color: #9b8357;
 }
+.resolved-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  width: min(780px, 100%);
+  margin: 28px auto 0;
+  padding: 11px 18px;
+  border: 1px solid rgba(46, 204, 113, 0.28);
+  background: rgba(46, 204, 113, 0.05);
+  border-radius: 3px;
+  font: 10px/1.8 var(--font-mono-local);
+  letter-spacing: 0.12em;
+  color: #8fae9c;
+  text-align: left;
+}
+.resolved-banner b {
+  color: #5fd68f;
+  font-weight: 600;
+}
+.resolved-dot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background: #2ecc71;
+  box-shadow: 0 0 10px rgba(46, 204, 113, 0.6);
+}
+@media (max-width: 640px) {
+  .resolved-banner {
+    gap: 9px;
+    margin-top: 22px;
+    padding: 9px 12px;
+    font-size: 9px;
+  }
+}
 .clock-display {
   display: flex;
   align-items: center;
@@ -461,6 +497,9 @@ h1 em {
 .log-author-system {
   color: var(--gold);
 }
+.log-author-support {
+  color: #5fd68f;
+}
 .log-text {
   color: #c9c4b9;
   white-space: normal;
@@ -519,6 +558,13 @@ h1 em {
 }
 .timeline-label-danger {
   color: #ff6a5b;
+}
+.timeline-dot-green {
+  background: #2ecc71;
+  box-shadow: 0 0 8px rgba(46, 204, 113, 0.5);
+}
+.timeline-label-green {
+  color: #5fd68f;
 }
 @media (prefers-reduced-motion: reduce) {
   .timeline-dot-danger {
@@ -645,6 +691,15 @@ h1 em {
   border-radius: 50%;
   background: #f39c12;
   animation: pulse 1.6s ease-in-out infinite;
+}
+.status-badge-resolved {
+  border-color: rgba(46, 204, 113, 0.45);
+  color: #5fd68f;
+  background: rgba(46, 204, 113, 0.06);
+}
+.badge-dot-green {
+  background: #2ecc71;
+  box-shadow: 0 0 8px rgba(46, 204, 113, 0.45);
 }
 .live-clock {
   font: 500 11px var(--font-mono-local);
@@ -783,6 +838,15 @@ h1 em {
   font: 8.5px var(--font-mono-local);
   letter-spacing: 0.16em;
   color: #5a5952;
+}
+.gauge-center-green {
+  color: #2ecc71;
+}
+.metric-value-green {
+  color: #2ecc71;
+}
+.details-value-green {
+  color: #2ecc71;
 }
 .dash-note {
   position: relative;
